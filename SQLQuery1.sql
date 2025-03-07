@@ -16,7 +16,7 @@ from(
 	select ENTIDAD_UM,count(CLASIFICACION_FINAL)cont,FECHA_SINTOMAS 
 	from datoscovid 
 	where CLASIFICACION_FINAL=3 
-	group by ENTIDAD_UM
+	group by ENTIDAD_UM,FECHA_SINTOMAS
 )as t1 
 order by casos_confirmados desc
 
