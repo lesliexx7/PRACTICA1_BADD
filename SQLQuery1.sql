@@ -3,6 +3,22 @@ select * from dbo.cat_entidades;
 select * from dbo.datoscovid;
 
 
+/************************************
+	Consulta No.1 Listar el top 5 de las entidades con más casos confirmados por cada uno de los años 
+registrados en la base de datos. 
+	Requisitos: Enlistar top 5, con más casos confirmados
+	Responsable: Macías Galván Arturo Daniel
+
+*************************************/
+
+select top 5 cont as casos_confirmados,ENTIDAD_UM
+from(
+	select ENTIDAD_UM,count(CLASIFICACION_FINAL)cont,FECHA_SINTOMAS 
+	from datoscovid 
+	where CLASIFICACION_FINAL=3 
+	group by ENTIDAD_UM
+)as t1 
+order by casos_confirmados desc
 
 /************************************
 	Consulta No.2 Listar el municipio con mÃ¡s casos confirmados recuperados por estado y por aÃ±o
@@ -75,6 +91,23 @@ where clasificacion_final in (1, 2, 3);
 
 
 /************************************
+	Consulta No.4 Listar los municipios que no tengan casos confirmados en todas las morbilidades: 
+hipertensión, obesidad, diabetes, tabaquismo. 
+	Requisitos: tener pacientes que tengan neumonia, que no hayan fallecido y que su total sea mayor que los que si lo hicieron
+	Responsable: Macías Galván Arturo Daniel
+
+*************************************/
+
+SELECT MUNICIPIO_RES
+FROM datoscovid
+WHERE CLASIFICACION_FINAL IN (1, 2, 3) -- Casos confirmados
+GROUP BY MUNICIPIO_RES
+HAVING SUM(CASE WHEN HIPERTENSION = 1 THEN 1 ELSE 0 END) = 0
+   AND SUM(CASE WHEN OBESIDAD = 1 THEN 1 ELSE 0 END) = 0
+   AND SUM(CASE WHEN DIABETES = 1 THEN 1 ELSE 0 END) = 0
+   AND SUM(CASE WHEN TABAQUISMO = 1 THEN 1 ELSE 0 END) = 0;
+
+/************************************
 	Consulta No.5 Listar los estados con mÃ¡s casos recuperados con neumonÃ­a
 	Requisitos: tener pacientes que tengan neumonia, que no hayan fallecido y que su total sea mayor que los que si lo hicieron
 	Responsable: Legorreta Rodriguez Maria Fernanda
@@ -123,6 +156,24 @@ group by entidad_res, year(try_cast(fecha_ingreso as date))
 order by año, total_casos desc;
 
 
+/************************************
+	Consulta No.7 Para el año 2020 y 2021 cuál fue el mes con más casos registrados, confirmados, 
+sospechosos, por estado registrado en la base de datos. 
+	Requisitos: Años 2020 y 2021
+	Responsable: Macías Galván Arturo Daniel
+
+*************************************/
+SELECT TOP 1 Total_Casos, Mes 
+FROM (
+    SELECT YEAR(FECHA_INGRESO) AS Año, MONTH(FECHA_INGRESO) AS Mes, ENTIDAD_RES,
+           COUNT(*) AS Total_Casos
+    FROM datoscovid
+    WHERE YEAR(FECHA_INGRESO) IN (2020, 2021)
+    AND CLASIFICACION_FINAL IN (1, 2, 3, 6) -- Confirmados y sospechosos
+    GROUP BY YEAR(FECHA_INGRESO), MONTH(FECHA_INGRESO), ENTIDAD_RES
+) AS t1
+WHERE Año = 2020 or  Año = 2021
+ORDER BY Total_Casos DESC
 
 /************************************
 	Consulta No.8 Listar el municipio con menos defunciones en el mes con mas casos confirmados con neumonÃ­a en los aÃ±os 2020 y 2021
@@ -183,6 +234,21 @@ from casos_recuperados
 order by total_recuperados asc, entidad_res, municipio_res;
 
 /************************************
+    consulta no. 10. Listar el porcentaje de casos confirmado por género en los años 2020 y 2021.
+    recuperados en el año 2021.  
+    responsable: Macías Galván Arturo Daniel
+*************************************/
+select SEXO,(
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3 and 
+												(FECHA_SINTOMAS like '2020-%' or FECHA_SINTOMAS like'2021-%'))
+)casos from datoscovid 
+where CLASIFICACION_FINAL=3 and (FECHA_SINTOMAS like '2020-%' or FECHA_SINTOMAS like'2021-%') group by SEXO 
+go
+
+
+/************************************
 	Consulta No.11 Listar el porcentaje de casos hospitalizados por estado en el aÃ±o 2020
 	Requisitos: estar hospitalizado, fecha de ingreso en 2020, agrupar por estado el numero de casos hospitalizados, comparar el porcentaje con los casos totales por aÃ±o
 	Responsable: Legorreta Rodriguez Maria Fernanda
@@ -231,7 +297,45 @@ group by ce.entidad, year(try_cast(dc.fecha_ingreso as date))
 order by ce.entidad, año;
 
 
+/************************************
+    consulta no. 13 Listar porcentajes de casos confirmados por género en el rango de edades de 20 a 30 años, 
+de 31 a 40 años, de 41 a 50 años, de 51 a 60 años y mayores a 60 años a nivel nacional.
+    responsable: Macías Galván Arturo Daniel
+*************************************/
 
+select  distinct(select 
+(
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3
+												)
+)from datoscovid where EDAD<=30 and EDAD>=20)anio20_30,
+		(select (
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3
+												)
+) from datoscovid where EDAD>=31 and EDAD<=40)anio31_40,
+		(select (
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3
+												)
+) from datoscovid where EDAD>=41 and EDAD<=50)anio41_50,
+		(select (
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3
+												)
+) from datoscovid where EDAD>=51 and EDAD<=60)anio51_60,
+		(select (
+		COUNT(CLASIFICACION_FINAL)*100.0 / (select count (CLASIFICACION_FINAL)
+												from datoscovid
+												where CLASIFICACION_FINAL=3
+												)
+) from datoscovid where EDAD>60)anio60_mas
+		
+from datoscovid where CLASIFICACION_FINAL=3
 /************************************
 	Consulta No.14 Listar el rango de edad con mas casos confirmados y que fallecieron en los aÃ±os 2020 y 2021
 	Requisitos: contabilizar por rango de edad, ordenar cual es mayor y menor
