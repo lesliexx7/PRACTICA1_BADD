@@ -79,26 +79,6 @@ HAVING COUNT(oh.SalesOrderID) = (
         WHERE c2.TerritoryID = c.TerritoryID
         GROUP BY oh2.CustomerID
     ) AS OrdenesPorCliente
-);
-
-SELECT 
-    t.Name AS Territorio,
-    p.FirstName + ' ' + p.LastName AS Cliente,
-    COUNT(oh.SalesOrderID) AS TotalOrdenes
-FROM order_hearder oh
-JOIN customers c ON oh.CustomerID = c.CustomerID
-JOIN person p ON c.PersonID = p.BusinessEntityID
-JOIN territory t ON c.TerritoryID = t.TerritoryID
-GROUP BY c.TerritoryID, t.Name, c.CustomerID, p.FirstName, p.LastName
-HAVING COUNT(oh.SalesOrderID) = (
-    SELECT MAX(OrdenesPorCliente.TotalOrdenes)
-    FROM (
-        SELECT COUNT(oh2.SalesOrderID) AS TotalOrdenes
-        FROM order_hearder oh2
-        JOIN customers c2 ON oh2.CustomerID = c2.CustomerID
-        WHERE c2.TerritoryID = c.TerritoryID
-        GROUP BY oh2.CustomerID
-    ) AS OrdenesPorCliente
 )
 ORDER BY t.Name ASC, Cliente ASC;
 
@@ -126,7 +106,3 @@ Where not exists(
 	)
 
 
-
-	SELECT DISTINCT ProductID
-	FROM order_detail
-WHERE SalesOrderID = 43676;
