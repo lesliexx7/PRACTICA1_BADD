@@ -1,7 +1,5 @@
 
 ------------------------------------------------------------
-DROP PROCEDURE IF EXISTS consultaMorbPorRegion;
-GO
 
 CREATE PROCEDURE consultaMorbPorRegion
 (
@@ -37,6 +35,7 @@ BEGIN
         WHERE clasificacion_final IN (1, 2, 3)
     '')';
 
+
+
     EXEC sp_executesql @SQLString;
-END
-GO
+
